@@ -4,6 +4,7 @@ from contextlib import chdir
 import os
 from math import ceil, floor
 import subprocess
+import argparse
 # functions below have to be executed in the directory where the images are going to be downloaded
 # gets upright and upside down image for merging
 def get_two_images(full_text_id, page_num, orientation):
@@ -175,6 +176,34 @@ def get_number_of_pages(full_text_id):
     return number_of_pages
   print(f"Response code not 200. Was: {response.status_code}")
   return None
-
-  
+# temporary measure, will make more complicated later
+parser = argparse.ArgumentParser()
+parser.add_argument('-id')
+args = parser.parse_args()
+pages = get_number_of_pages(args.id)
+print(f"Making directory for HathiTrust book with id get_number_of_pages{args.id}")
+directory = f"{args.id}_images_and_djvu_files"
+try:
+  os.mkdir(directory)
+except: 
+  print("Directory already made")
+# go to the directory where the hathitrust images will download
+cwd = os.getcwd()
+os.chdir(f"{cwd}/{directory}")
+finalcommand = ["djvm", "-c"]
+for i in range(pages):
+  finalcommand.append(f"{i}.djvu")
+  if os.path.isfile(f"{i}.djvu"):
+    print(f"skipping page {i} because djvu file already exists")
+    continue
+  if os.path.isfile(f"{i}.png"):
+    convert_image_to_djvu(args.id, i)
+    print(f"skipping page {i} because png file already exists")
+  get_single_image(args.id, i)
+  convert_image_to_djvu(args.id, i)
+  print(f"page {i} successfully downloaded and converted")
+finalcommand.append(f"{args.id}.djvu")
+print(f"running final command")
+subprocess.run(finalcommand)
+os.chdir(cwd)
 
