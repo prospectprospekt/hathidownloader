@@ -151,6 +151,7 @@ def convert_image_to_djvu(full_text_id, page_num):
   return None      
 # this is copied from quicktranscribe
 # https://github.com/PseudoSkull/QuickTranscribe/blob/main/hathi.py
+# starting from here, the functions do not get executed in the same directory that the images are downloaded in
 def get_number_of_pages(full_text_id):
   print("Retrieving number of pages in scan...")
   url = f"https://babel.hathitrust.org/cgi/pt?id={full_text_id}"
@@ -174,5 +175,6 @@ def get_number_of_pages(full_text_id):
     return number_of_pages
   print(f"Response code not 200. Was: {response.status_code}")
   return None
+
   
 
