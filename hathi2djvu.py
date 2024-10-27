@@ -1,9 +1,9 @@
 from bs4 import BeautifulSoup
 import requests
-from contextlib import chdir
 import os
 from math import ceil, floor
 import subprocess
+from re import search
 import argparse
 # functions below have to be executed in the directory where the images are going to be downloaded
 # gets upright and upside down image for merging
@@ -36,11 +36,11 @@ def find_height(full_text_id, page_num):
   while True:
     response = requests.get(url)
     if response.status_code == 200:
-      # get last four characters of x-image-size, which is the height
-      size = response.headers['x-image-size']
+      # get image height using re.search
+      size = search(r"^\d*", response.headers['x-image-size'])
       break
     print(f"Page {page_num}: didn't get height with status code {response.status_code}. Trying again.")
-  return int(size[-4:])
+  return int(size.group())
 # requires: cd to directory where images are going to be downloaded
 # and imagemagick
 # modifies: command line? and print
@@ -88,8 +88,9 @@ def get_single_image(full_text_id, page_num):
   return None
 # return array for the subprocess
 def convert_image(full_text_id, page_num):
-  page_url_for_determining_bitonality = f"https://babel.hathitrust.org/cgi/imgsrv/image?id={full_text_id};seq={page_num};size=1000"
-  page_url_for_determining_color = f"https://babel.hathitrust.org/cgi/imgsrv/image?id={full_text_id};seq={page_num};size=1000;format=image/"
+  # get the smallest files to determine bitonality/color
+  page_url_for_determining_bitonality = f"https://babel.hathitrust.org/cgi/imgsrv/image?id={full_text_id};seq={page_num};size=1"
+  page_url_for_determining_color = f"https://babel.hathitrust.org/cgi/imgsrv/image?id={full_text_id};seq={page_num};size=1;format=image/"
   # if image is jpeg, then it is either greyscale or color. If it is png then it is bitonal
   while True:
     response_for_bitonality = requests.get(page_url_for_determining_bitonality)
@@ -149,10 +150,45 @@ def convert_image_to_djvu(full_text_id, page_num):
   convert_image(full_text_id, page_num)
   delete_pnm_file(page_num)
   print(f"Page {page_num}: sucessfully converted to djvu!")
-  return None      
+  return None
+# types is an array with each position containing either the number 1, 2, or 3
+# 1 means to download the image, 2 means to create a blank djvu, and 3
+# means to skip the page entirely
+def get_blank_djvu(full_text_id, page_num):
+  print(f"Page {page_num}: getting blank djvu")
+  # get the height and width, and image type
+  url = f"https://babel.hathitrust.org/cgi/imgsrv/image?id={full_text_id};seq={page_num};size=full"
+  while True:
+    response = requests.get(url)
+    if response.status_code == 200:
+      height = search(r"^\d*", response.headers['x-image-size'])
+      width = search(r"\d*$", response.headers['x-image-size'])
+      content_type = response.headers['content-type']
+      if content_type == "image/png":
+        subprocess.run(["magick", "-size", f"{round(int(height.group()) / 2)}x{round(int(width.group()) / 2)}", "canvas:white", f"{page_num}.pbm"])
+      else:
+        # non-bitonal images are half the width and height of bitonal images
+        subprocess.run(["magick", "-size", f"{height.group()}x{width.group()}", "canvas:white", f"{page_num}.pbm"])
+      break   
+    print(f"Page {page_num}: got status code {response.status_code}. Trying again")
+  if not os.path.exists(f"{page_num}.djvu"):
+    subprocess.run(["cjb2", "-dpi", "100", f"{page_num}.pbm", f"{page_num}.djvu"])
+  else:
+    print(f"Page {page_num}: djvu already exists!")
+  return None
+def download_hathi_images(full_text_id, pages, types):
+  for i in range(pages):
+    page_num = i + 1
+    if types[i] == 1:
+      print(f"Page {page_num}: starting download...")
+      get_single_image(full_text_id, page_num)
+    elif types[i] == 3:
+      return
+        
+
+
 # this is copied from quicktranscribe
 # https://github.com/PseudoSkull/QuickTranscribe/blob/main/hathi.py
-# starting from here, the functions do not get executed in the same directory that the images are downloaded in
 def get_number_of_pages(full_text_id):
   print("Retrieving number of pages in scan...")
   url = f"https://babel.hathitrust.org/cgi/pt?id={full_text_id}"
@@ -176,34 +212,11 @@ def get_number_of_pages(full_text_id):
     return number_of_pages
   print(f"Response code not 200. Was: {response.status_code}")
   return None
-# temporary measure, will make more complicated later
-parser = argparse.ArgumentParser()
-parser.add_argument('-id')
-args = parser.parse_args()
-pages = get_number_of_pages(args.id)
-print(f"Making directory for HathiTrust book with id get_number_of_pages{args.id}")
-directory = f"{args.id}_images_and_djvu_files"
-try:
-  os.mkdir(directory)
-except: 
-  print("Directory already made")
-# go to the directory where the hathitrust images will download
-cwd = os.getcwd()
-os.chdir(f"{cwd}/{directory}")
-finalcommand = ["djvm", "-c"]
-for i in range(pages):
-  finalcommand.append(f"{i}.djvu")
-  if os.path.isfile(f"{i}.djvu"):
-    print(f"skipping page {i} because djvu file already exists")
-    continue
-  if os.path.isfile(f"{i}.png"):
-    convert_image_to_djvu(args.id, i)
-    print(f"skipping page {i} because png file already exists")
-  get_single_image(args.id, i)
-  convert_image_to_djvu(args.id, i)
-  print(f"page {i} successfully downloaded and converted")
-finalcommand.append(f"{args.id}.djvu")
-print(f"running final command")
-subprocess.run(finalcommand)
-os.chdir(cwd)
+
+  
+
+
+
+  
+  
 
