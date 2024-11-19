@@ -241,7 +241,7 @@ def convert_hathi_images(full_text_id):
       convert_image_to_djvu(full_text_id, page_num)
   os.chdir(prevdir)
   print("All images converted to djvu. Combining...")
-  djvm_command.append(f"{full_text_id}.djvu"}
+  djvm_command.append(f"{full_text_id}.djvu")
   subprocess.run(djvm_command)
   print(f"Combined! the final djvu file can be found as {full_text_id}.djvu in the same directory where the images are")
   return None
