@@ -223,16 +223,49 @@ def download_hathi_images(full_text_id):
   # exit the directory
   os.chdir(prevdir)
   return None
+def convert_hathi_images(full_text_id):
+  directory_name = f"{full_text_id}_images"
+  if not os.path.exists(directory_name):
+    print(f"Directory named {full_text_id}_images doesn't exist!")
+    return None
+  prevdir = os.getcwd()
+  os.chdir(directory_name)
+  total_page_num = get_number_of_pages(full_text_id)
+  djvm_command = ["djvm", "-c"]
+  for i in range(total_page_num):
+    page_num = i + 1
+    # account for purposefully deleted pages
+    if os.path.exists(f"{page_num}.png"):
+      djvm_command.append(f"{page_num}.djvu")
+    if not os.path.exists(f"{page_num}.djvu"):
+      convert_image_to_djvu(full_text_id, page_num)
+  os.chdir(prevdir)
+  print("All images converted to djvu. Combining...")
+  djvm_command.append(f"{full_text_id}.djvu"}
+  subprocess.run(djvm_command)
+  print(f"Combined! the final djvu file can be found as {full_text_id}.djvu in the same directory where the images are")
+  return None
 parser = argparse.ArgumentParser()
 parser.add_argument("-id", help="id for page")
 parser.add_argument("-p", help="page number")
 parser.add_argument("-dsi", action="store_true", help="download single page")
 parser.add_argument("-dap", action="store_true", help="download all pages")
+parser.add_argument("-cap", action="store_true", help="convert all already=downloaded images")
 args = parser.parse_args()
 if args.dsi == 1:
-    get_single_image(args.id, args.p)
+  get_single_image(args.id, args.p)
 elif args.dap == 1:
-    download_hathi_images(args.id)
+  download_hathi_images(args.id)
+elif args.cap == 1:
+  convert_hathi_images(args.id)
+# assume that user wants to both download and convert images
+else:
+  download_hathi_images(args.id)
+  convert_hathi_images(args.id)
+  
+
+    
+  
 
 
 
