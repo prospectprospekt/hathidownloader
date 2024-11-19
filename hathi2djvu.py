@@ -240,9 +240,9 @@ def convert_hathi_images(full_text_id):
     if not os.path.exists(f"{page_num}.djvu"):
       convert_image_to_djvu(full_text_id, page_num)
   print("All images converted to djvu. Combining...")
-  djvm_command.append(f"{full_text_id}.djvu")
+  djvm_command.append("final.djvu")
   subprocess.run(djvm_command)
-  print(f"Combined! the final djvu file can be found as {full_text_id}.djvu in the same directory where the images are")
+  print(f"Combined! the final djvu file can be found as final.djvu in the same directory where the images are")
   os.chdir(prevdir)
   return None
 parser = argparse.ArgumentParser()
