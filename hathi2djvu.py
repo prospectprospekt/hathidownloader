@@ -231,7 +231,7 @@ def convert_hathi_images(full_text_id):
   prevdir = os.getcwd()
   os.chdir(directory_name)
   total_page_num = get_number_of_pages(full_text_id)
-  djvm_command = ["djvm", "-c"]
+  djvm_command = ["djvm", "-c", "final.djvu"]
   for i in range(total_page_num):
     page_num = i + 1
     # account for purposefully deleted pages
@@ -240,7 +240,6 @@ def convert_hathi_images(full_text_id):
     if not os.path.exists(f"{page_num}.djvu"):
       convert_image_to_djvu(full_text_id, page_num)
   print("All images converted to djvu. Combining...")
-  djvm_command.append("final.djvu")
   subprocess.run(djvm_command)
   print(f"Combined! the final djvu file can be found as final.djvu in the same directory where the images are")
   os.chdir(prevdir)
