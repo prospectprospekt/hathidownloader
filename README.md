@@ -5,6 +5,7 @@ This downloads HathiTrust images without the watermark and converts them to a si
 ## Prerequisites
 To use this program, you will need:
 * Python
+* djvuLibre
 * ImageMagick
 * BeautifulSoup (https://www.crummy.com/software/BeautifulSoup/)
 * and the requests module (https://requests.readthedocs.io/en/latest/user/install/#install)
