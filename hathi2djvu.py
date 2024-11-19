@@ -7,46 +7,35 @@ from re import search
 import argparse
 # functions below have to be executed in the directory where the images are going to be downloaded
 # gets upright and upside down image for merging
-def get_two_images(full_text_id, page_num, orientation):
-  if orientation:  
-    url_upright = f"https://babel.hathitrust.org/cgi/imgsrv/image?id={full_text_id};seq={page_num};size=full;format=image/png"
-    while True:
-      response = requests.get(url_upright)
-      if response.status_code == 200:
-        image_path = f"{page_num}_upright.png"
-        with open(image_path, 'wb') as file:
-          file.write(response.content)
-        break
-      print(f"Page {page_num}: got status code {response.status_code} while trying to get upright image. Trying again.")
-  else:
-    url_upside_down = f"https://babel.hathitrust.org/cgi/imgsrv/image?id={full_text_id};seq={page_num};size=full;format=image/png;rotation=180"
-    while True:
-      response = requests.get(url_upside_down)
-      if response.status_code == 200:
-        image_path = f"{page_num}_upside_down.png"
-        with open(image_path, 'wb') as file:
-          file.write(response.content)
-        break
-      print(f"Page {page_num}: got status code {response.status_code} while trying to get upside down image. Trying again.")
-  return None
-# finds the height of the image via requests
-# modifies: print
-def find_height(full_text_id, page_num):
-  url = f"https://babel.hathitrust.org/cgi/imgsrv/image?id={full_text_id};seq={page_num};size=full;format=image/png"
+def get_two_images(full_text_id, page_num): 
+  url_upright = f"https://babel.hathitrust.org/cgi/imgsrv/image?id={full_text_id};seq={page_num};size=full;format=image/png"
   while True:
-    response = requests.get(url)
+    response = requests.get(url_upright)
     if response.status_code == 200:
-      # get image height using re.search
-      size = search(r"^\d*", response.headers['x-image-size'])
+      # save height for later
+      height = search(r"\d*$", response.headers['x-image-size'])
+      image_path = f"{page_num}_upright.png"
+      with open(image_path, 'wb') as file:
+        file.write(response.content)
       break
-    print(f"Page {page_num}: didn't get height with status code {response.status_code}. Trying again.")
-  return int(size.group())
+    print(f"Page {page_num}: got status code {response.status_code} while trying to get upright image. Trying again.")
+  url_upside_down = f"https://babel.hathitrust.org/cgi/imgsrv/image?id={full_text_id};seq={page_num};size=full;format=image/png;rotation=180"
+  while True:
+    response = requests.get(url_upside_down)
+    if response.status_code == 200:
+      image_path = f"{page_num}_upside_down.png"
+      with open(image_path, 'wb') as file:
+        file.write(response.content)
+      break
+    print(f"Page {page_num}: got status code {response.status_code} while trying to get upside down image. Trying again.")
+  # return height for use in the merge_images function
+  return int(height.group()) 
 # requires: cd to directory where images are going to be downloaded
 # and imagemagick
 # modifies: command line? and print
 # effects: joins image for page number using imagemagick
-def merge_images(full_text_id, page_num):
-  half = find_height(full_text_id, page_num) / 2.0
+def merge_images(full_text_id, page_num, height):
+  half = height / 2.0
   larger_half = int(ceil(half))
   smaller_half = int(floor(half))
   upright_image_name = f"{page_num}_upright.png"
@@ -64,29 +53,41 @@ def merge_images(full_text_id, page_num):
   subprocess.run(rotate_upside_down_command)
   subprocess.run(join)
   return None
-# delete files left over from merging top and bottom images
-def delete_files_for_single_image(page_num):
+# function to call when downloading a single image
+def get_single_image(full_text_id, page_num):
+  # do not do anything if image already exists
   upright_image_name = f"{page_num}_upright.png"
   upside_down_image_name = f"{page_num}_upside_down.png"
   cropped_upright = f"Cropped_{page_num}_upright.png"
   cropped_upside_down = f"Cropped_{page_num}_upside_down.png"
   cropped_upside_down_rotated = f"Rotated_cropped_{page_num}_upside_down.png"
+  error_message = f"Page {page_num}: file already exists, not downloading image!"
+  if os.path.exists(upright_image_name):
+      print(error_message)
+      return None
+  elif os.path.exists(upside_down_image_name):
+      print(error_message)
+      return None
+  elif os.path.exists(cropped_upright):
+      print(error_message)
+      return None
+  elif os.path.exists(cropped_upside_down):
+      print(error_message)
+      return None
+  elif os.path.exists(cropped_upside_down_rotated):
+      print(error_message)
+      return None
+  # finds the height while downloading the two images
+  height = get_two_images(full_text_id, page_num)
+  merge_images(full_text_id, page_num, height)
+  # delete leftover images
   os.remove(upright_image_name)
   os.remove(upside_down_image_name)
   os.remove(cropped_upright)
   os.remove(cropped_upside_down)
   os.remove(cropped_upside_down_rotated)
-  print(f"Page {page_num}: {page_num}_upright.png, {page_num}_upside_down.png, Cropped_{page_num}_upright.png, Cropped_{page_num}_upside_down.png, and Rotated_cropped_{page_num}_upside_down.png successfully deleted!")
-  return None
-# function to call when downloading a single image
-def get_single_image(full_text_id, page_num):
-  get_two_images(full_text_id, page_num, True)
-  get_two_images(full_text_id, page_num, False)
-  merge_images(full_text_id, page_num)
-  delete_files_for_single_image(page_num)
   print(f"Page {page_num}: sucessfully assembled png image!")
   return None
-# return array for the subprocess
 def convert_image(full_text_id, page_num):
   # get the smallest files to determine bitonality/color
   page_url_for_determining_bitonality = f"https://babel.hathitrust.org/cgi/imgsrv/image?id={full_text_id};seq={page_num};size=1"
@@ -121,9 +122,9 @@ def convert_image(full_text_id, page_num):
           print(f"Page {page_num}: got status code {response_for_color.status_code} while trying to determine color/greyscale, trying again.")
         break
       # if image is bitonal, convert with cjb2 w/ dpi 200 because
-      # bitonal files are double the size of non-bitonal files
+      # bitonal files are double the width/height of non-bitonal files
       else:
-        pnm_name = f"{page_num}.pbm"
+        pnm_name = f"{page_num}.pgm"
         imagemagick_command = ["magick", f"{page_num}.png", pnm_name]
         djvulibre_command = ["cjb2", "-dpi", "200", pnm_name, f"{page_num}.djvu"]
         break
@@ -132,10 +133,15 @@ def convert_image(full_text_id, page_num):
   subprocess.run(djvulibre_command)
   return None
 # deletes pnm file after converting it to djvu
-def delete_pnm_file(page_num):
+def convert_image_to_djvu(full_text_id, page_num):
   pgm = f"{page_num}.pgm" 
   pbm = f"{page_num}.pbm"
   ppm = f"{page_num}.ppm"
+  # do not move on if pnm file already exists
+  if os.path.exists(pgm) or os.path.exists(pbm) or os.path.exists(ppm):
+      print(f"Page {page_num}: pnm files already exist, not conveting to djvu!")
+      return None
+  convert_image(full_text_id, page_num)
   if os.path.exists(pgm):
     os.remove(pgm)
     print(f"Page {page_num}: pgm file successfully deleted!")
@@ -145,49 +151,32 @@ def delete_pnm_file(page_num):
   elif os.path.exists(ppm):
     os.remove(ppm)
     print(f"Page {page_num}: ppm file successfully deleted!")
-  return None
-def convert_image_to_djvu(full_text_id, page_num):
-  convert_image(full_text_id, page_num)
-  delete_pnm_file(page_num)
   print(f"Page {page_num}: sucessfully converted to djvu!")
   return None
-# types is an array with each position containing either the number 1, 2, or 3
-# 1 means to download the image, 2 means to create a blank djvu, and 3
-# means to skip the page entirely
-def get_blank_djvu(full_text_id, page_num):
+def generate_blank_djvu(full_text_id, page_num):
   print(f"Page {page_num}: getting blank djvu")
   # get the height and width, and image type
   url = f"https://babel.hathitrust.org/cgi/imgsrv/image?id={full_text_id};seq={page_num};size=full"
   while True:
     response = requests.get(url)
     if response.status_code == 200:
-      height = search(r"^\d*", response.headers['x-image-size'])
-      width = search(r"\d*$", response.headers['x-image-size'])
+      width = search(r"^\d*", response.headers['x-image-size'])
+      height = search(r"\d*$", response.headers['x-image-size'])
       content_type = response.headers['content-type']
       if content_type == "image/png":
-        subprocess.run(["magick", "-size", f"{round(int(height.group()) / 2)}x{round(int(width.group()) / 2)}", "canvas:white", f"{page_num}.pbm"])
+        subprocess.run(["magick", "-size", f"{width.group()}x{height.group()}", "canvas:white", f"{page_num}.pbm"])
+        subprocess.run(["cjb2", "-dpi", "200", f"{page_num}.pbm", f"{page_num}.djvu"])
       else:
         # non-bitonal images are half the width and height of bitonal images
-        subprocess.run(["magick", "-size", f"{height.group()}x{width.group()}", "canvas:white", f"{page_num}.pbm"])
+        subprocess.run(["magick", "-size", f"{width.group()}x{height.group()}", "canvas:white", f"{page_num}.pbm"])
+        subprocess.run(["cjb2", "-dpi", "100", f"{page_num}.pbm", f"{page_num}.djvu"])
       break   
     print(f"Page {page_num}: got status code {response.status_code}. Trying again")
-  if not os.path.exists(f"{page_num}.djvu"):
-    subprocess.run(["cjb2", "-dpi", "100", f"{page_num}.pbm", f"{page_num}.djvu"])
-  else:
-    print(f"Page {page_num}: djvu already exists!")
+  print(f"Page {page_num}:blank djvu sucessfully created!")
   return None
-def download_hathi_images(full_text_id, pages, types):
-  for i in range(pages):
-    page_num = i + 1
-    if types[i] == 1:
-      print(f"Page {page_num}: starting download...")
-      get_single_image(full_text_id, page_num)
-    elif types[i] == 3:
-      return
-        
-
-
-# this is copied from quicktranscribe
+# this is copied from quicktranscribe. Code from here should be executed 
+# without going into the directory where the images will be
+# downloaded
 # https://github.com/PseudoSkull/QuickTranscribe/blob/main/hathi.py
 def get_number_of_pages(full_text_id):
   print("Retrieving number of pages in scan...")
@@ -212,8 +201,41 @@ def get_number_of_pages(full_text_id):
     return number_of_pages
   print(f"Response code not 200. Was: {response.status_code}")
   return None
+def download_hathi_images(full_text_id):
+  # _images is appended to directory name so that you can upload them
+  # to the internet archive to generate ocr
+  directory_name = f"{full_text_id}_images"
+  # make directory if it doesn't exist
+  if not os.path.exists(directory_name):
+      os.mkdir(directory_name)
+  # cd to the directory
+  prevdir = os.getcwd()
+  os.chdir(directory_name)
+  total_page_num = get_number_of_pages(full_text_id)
+  for i in range(total_page_num):
+    page_num = i + 1
+    # do not download image if image already exists
+    if os.path.exists(f"{page_num}.png"):
+        print(f"Page {page_num}: image already exists!")
+        continue
+    get_single_image(full_text_id, page_num)
+  print(f"All images downloaded!")
+  # exit the directory
+  os.chdir(prevdir)
+  return None
+parser = argparse.ArgumentParser()
+parser.add_argument("-id", help="id for page")
+parser.add_argument("-p", help="page number")
+parser.add_argument("-dsi", action="store_true", help="download single page")
+parser.add_argument("-dap", action="store_true", help="download all pages")
+args = parser.parse_args()
+if args.dsi == 1:
+    get_single_image(args.id, args.p)
+elif args.dap == 1:
+    download_hathi_images(args.id)
 
-  
+
+
 
 
 
