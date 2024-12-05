@@ -225,7 +225,7 @@ def download_hathi_images(full_text_id):
   print(f"All images downloaded!")
   # exit the directory
   os.chdir(prevdir)
-  return None
+  return total_page_num
 def convert_hathi_images(full_text_id, total_page_num):
   directory_name = f"{full_text_id}_images"
   if not os.path.exists(directory_name):
@@ -245,7 +245,7 @@ def convert_hathi_images(full_text_id, total_page_num):
   subprocess.run(djvm_command)
   print(f"Combined! the final djvu file can be found as final.djvu in the same directory where the images are")
   os.chdir(prevdir)
-  return total_page_num
+  return None
 parser = argparse.ArgumentParser()
 parser.add_argument("-id", help="id for page")
 parser.add_argument("-p", help="page number")
