@@ -124,7 +124,10 @@ def convert_image(full_text_id, page_num):
       # if image is bitonal, convert with cjb2 w/ dpi 200 because
       # bitonal files are double the width/height of non-bitonal files
       else:
-        pnm_name = f"{page_num}.pgm"
+        # hash of converted djvu file is the same whether the image is
+        # converted to pbm or pgm; using pbm because djvulibre documentation
+        # says so
+        pnm_name = f"{page_num}.pbm" 
         imagemagick_command = ["magick", f"{page_num}.png", pnm_name]
         djvulibre_command = ["cjb2", "-dpi", "200", pnm_name, f"{page_num}.djvu"]
         break
@@ -223,16 +226,15 @@ def download_hathi_images(full_text_id):
   # exit the directory
   os.chdir(prevdir)
   return None
-def convert_hathi_images(full_text_id):
+def convert_hathi_images(full_text_id, total_page_num):
   directory_name = f"{full_text_id}_images"
   if not os.path.exists(directory_name):
     print(f"Directory named {full_text_id}_images doesn't exist!")
     return None
   prevdir = os.getcwd()
   os.chdir(directory_name)
-  total_page_num = get_number_of_pages(full_text_id)
   djvm_command = ["djvm", "-c", "final.djvu"]
-  for i in range(total_page_num):
+  for i in range(-1, total_page_num + 1):
     page_num = i + 1
     # account for purposefully deleted pages
     if os.path.exists(f"{page_num}.png"):
@@ -243,7 +245,7 @@ def convert_hathi_images(full_text_id):
   subprocess.run(djvm_command)
   print(f"Combined! the final djvu file can be found as final.djvu in the same directory where the images are")
   os.chdir(prevdir)
-  return None
+  return total_page_num
 parser = argparse.ArgumentParser()
 parser.add_argument("-id", help="id for page")
 parser.add_argument("-p", help="page number")
@@ -256,11 +258,11 @@ if args.dsi == 1:
 elif args.dap == 1:
   download_hathi_images(args.id)
 elif args.cap == 1:
-  convert_hathi_images(args.id)
+  convert_hathi_images(args.id, get_number_of_pages(args.id))
 # assume that user wants to both download and convert images
 else:
-  download_hathi_images(args.id)
-  convert_hathi_images(args.id)
+  pages = download_hathi_images(args.id)
+  convert_hathi_images(args.id, pages)
   
 
     
