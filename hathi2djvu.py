@@ -63,20 +63,20 @@ def get_single_image(full_text_id, page_num):
   cropped_upside_down_rotated = f"Rotated_cropped_{page_num}_upside_down.png"
   error_message = f"Page {page_num}: file already exists, not downloading image!"
   if os.path.exists(upright_image_name):
-      print(error_message)
-      return None
+    print(error_message)
+    return None
   elif os.path.exists(upside_down_image_name):
-      print(error_message)
-      return None
+    print(error_message)
+    return None
   elif os.path.exists(cropped_upright):
-      print(error_message)
-      return None
+    print(error_message)
+    return None
   elif os.path.exists(cropped_upside_down):
-      print(error_message)
-      return None
+    print(error_message)
+    return None
   elif os.path.exists(cropped_upside_down_rotated):
-      print(error_message)
-      return None
+    print(error_message)
+    return None
   # finds the height while downloading the two images
   height = get_two_images(full_text_id, page_num)
   merge_images(full_text_id, page_num, height)
@@ -142,8 +142,8 @@ def convert_image_to_djvu(full_text_id, page_num):
   ppm = f"{page_num}.ppm"
   # do not move on if pnm file already exists
   if os.path.exists(pgm) or os.path.exists(pbm) or os.path.exists(ppm):
-      print(f"Page {page_num}: pnm files already exist, not conveting to djvu!")
-      return None
+    print(f"Page {page_num}: pnm files already exist, not conveting to djvu!")
+    return None
   convert_image(full_text_id, page_num)
   if os.path.exists(pgm):
     os.remove(pgm)
@@ -210,7 +210,7 @@ def download_hathi_images(full_text_id, total_page_num):
   directory_name = f"{full_text_id}_images"
   # make directory if it doesn't exist
   if not os.path.exists(directory_name):
-      os.mkdir(directory_name)
+    os.mkdir(directory_name)
   # cd to the directory
   prevdir = os.getcwd()
   os.chdir(directory_name)
@@ -218,8 +218,8 @@ def download_hathi_images(full_text_id, total_page_num):
     page_num = i + 1
     # do not download image if image already exists
     if os.path.exists(f"{page_num}.png"):
-        print(f"Page {page_num}: image already exists!")
-        continue
+      print(f"Page {page_num}: image already exists!")
+      continue
     get_single_image(full_text_id, page_num)
   print(f"All images downloaded!")
   # exit the directory
