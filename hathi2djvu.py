@@ -236,8 +236,9 @@ def convert_hathi_images(full_text_id, total_page_num):
   for i in range(total_page_num + 1):
     page_num = i + 1
     # account for purposefully deleted pages
-    if os.path.exists(f"{page_num}.png"):
-      djvm_command.append(f"{page_num}.djvu")
+    if not os.path.exists(f"{page_num}.png"):
+      continue
+    djvm_command.append(f"{page_num}.djvu")
     if not os.path.exists(f"{page_num}.djvu"):
       convert_image_to_djvu(full_text_id, page_num)
   print("All images converted to djvu. Combining...")
