@@ -204,7 +204,7 @@ def get_number_of_pages(full_text_id):
     return number_of_pages
   print(f"Response code not 200. Was: {response.status_code}")
   return None
-def download_hathi_images(full_text_id):
+def download_hathi_images(full_text_id, total_page_num):
   # _images is appended to directory name so that you can upload them
   # to the internet archive to generate ocr
   directory_name = f"{full_text_id}_images"
@@ -214,7 +214,6 @@ def download_hathi_images(full_text_id):
   # cd to the directory
   prevdir = os.getcwd()
   os.chdir(directory_name)
-  total_page_num = get_number_of_pages(full_text_id)
   for i in range(total_page_num):
     page_num = i + 1
     # do not download image if image already exists
@@ -225,7 +224,7 @@ def download_hathi_images(full_text_id):
   print(f"All images downloaded!")
   # exit the directory
   os.chdir(prevdir)
-  return total_page_num
+  return None
 def convert_hathi_images(full_text_id, total_page_num):
   directory_name = f"{full_text_id}_images"
   if not os.path.exists(directory_name):
@@ -234,7 +233,7 @@ def convert_hathi_images(full_text_id, total_page_num):
   prevdir = os.getcwd()
   os.chdir(directory_name)
   djvm_command = ["djvm", "-c", "final.djvu"]
-  for i in range(-1, total_page_num + 1):
+  for i in range(total_page_num + 1):
     page_num = i + 1
     # account for purposefully deleted pages
     if os.path.exists(f"{page_num}.png"):
@@ -256,12 +255,15 @@ args = parser.parse_args()
 if args.dsi == 1:
   get_single_image(args.id, args.p)
 elif args.dap == 1:
-  download_hathi_images(args.id)
+  pages = get_number_of_pages(args.id)
+  download_hathi_images(args.id, pages)
 elif args.cap == 1:
-  convert_hathi_images(args.id, get_number_of_pages(args.id))
+  pages = get_number_of_pages(args.id)
+  convert_hathi_images(args.id, pages)
 # assume that user wants to both download and convert images
 else:
-  pages = download_hathi_images(args.id)
+  pages = get_number_of_pages(args.id)
+  download_hathi_images(args.id, pages)
   convert_hathi_images(args.id, pages)
   
 
