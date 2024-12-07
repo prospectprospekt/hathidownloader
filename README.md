@@ -12,7 +12,7 @@ To use this program, you will need:
 ## How to use 
 The simplest use is the command python 
 
-`hathi2djvu.py -id [hathitrust id]`, 
+`python hathi2djvu.py -id [hathitrust id]`, 
 
 which will download the images and convert them to djvu. You can also download a single png image with 
 
