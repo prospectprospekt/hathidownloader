@@ -12,10 +12,19 @@ To use this program, you will need:
 ## How to use 
 The simplest use is the command python 
 
-`hathi2djvu.py -id [hathitrust id]`, which will download the images and convert them to djvu. You can also download a single png image with 
+`hathi2djvu.py -id [hathitrust id]`, 
+
+which will download the images and convert them to djvu. You can also download a single png image with 
+
 `python hathi2djvu.py -id [hathitrust id] -p [page number] -dsp`.
-`python hathi2djvu.py -id [hathitrust id] -dap` downloads all the pages without converting for ocr/page editing and removal purposes, and 
-`python hathi2djvu.py -id [hathitrust id] -cap` converts an existing directory of images (that has to be title "[hathitrust_id]_images"). 
+
+`python hathi2djvu.py -id [hathitrust id] -dap` 
+
+downloads all the pages without converting for ocr/page editing and removal purposes, and
+
+`python hathi2djvu.py -id [hathitrust id] -cap` 
+
+converts an existing directory of images (that has to be title "[hathitrust_id]_images"). 
 
 `-dsp` stands for "download single page", `-dap` stands for "download all pages", and `-cap` stands for "convert all pages"
 ## How to create a djvu file with a select number of/edited pages
