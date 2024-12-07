@@ -265,16 +265,3 @@ else:
   pages = get_number_of_pages(args.id)
   download_hathi_images(args.id, pages)
   convert_hathi_images(args.id, pages)
-  
-
-    
-  
-
-
-
-
-
-
-  
-  
-
