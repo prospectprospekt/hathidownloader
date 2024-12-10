@@ -124,7 +124,8 @@ def convert_image(full_text_id, page_num):
       # if image is bitonal, convert with cjb2 w/ dpi 200 because
       # bitonal files are double the width/height of non-bitonal files
       else:
-        pnm_name = f"{page_num}.pgm" 
+        # doesnt matter if image is converted to pbm or pgm, djvu result has same hash
+        pnm_name = f"{page_num}.pbm" 
         imagemagick_command = ["magick", f"{page_num}.png", pnm_name]
         djvulibre_command = ["cjb2", "-dpi", "200", pnm_name, f"{page_num}.djvu"]
         break
