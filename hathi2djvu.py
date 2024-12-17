@@ -205,7 +205,7 @@ def get_number_of_pages(full_text_id):
 def download_hathi_images(full_text_id, total_page_num):
   # _images is appended to directory name so that you can upload them
   # to the internet archive to generate ocr
-  directory_name = f"{full_text_id}_images"
+  directory_name = f"hathi2djvu_images"
   # make directory if it doesn't exist
   if not os.path.exists(directory_name):
     os.mkdir(directory_name)
@@ -224,9 +224,9 @@ def download_hathi_images(full_text_id, total_page_num):
   os.chdir(prevdir)
   return None
 def convert_hathi_images(full_text_id, total_page_num):
-  directory_name = f"{full_text_id}_images"
+  directory_name = f"hathi2djvu_images"
   if not os.path.exists(directory_name):
-    print(f"Directory named {full_text_id}_images doesn't exist!")
+    print(f"Directory named hathi2djvu_images doesn't exist!")
     return None
   prevdir = os.getcwd()
   os.chdir(directory_name)
