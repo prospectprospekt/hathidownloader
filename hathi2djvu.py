@@ -182,7 +182,6 @@ def generate_blank_djvu(full_text_id, page_num):
 def get_number_of_pages(full_text_id):
   print("Retrieving number of pages in scan...")
   url = f"https://babel.hathitrust.org/cgi/pt?id={full_text_id}"
-  print(url)
   response = requests.get(url)
   if response.status_code == 200:
     print("Response code 200. Parsing the HTML...")
