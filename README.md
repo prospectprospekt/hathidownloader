@@ -26,6 +26,8 @@ downloads all the pages without converting for ocr/page editing and removal purp
 
 converts an existing directory of images (that has to be title "[hathitrust_id]_images"). 
 
+NOTE: if the id has a dollar sign, enclose it in _single quotes_ or else you will encounter an error__
+
 `-dsp` stands for "download single page", `-dap` stands for "download all pages", and `-cap` stands for "convert all pages"
 ## How to create a djvu file with a select number of/edited pages
 Download all the pages with `-dap`. Then, delete/edit the necessary pages, and run the `cap` command to create the djvu. Some HathiTrust books (like those from the University of Virginia) put the scans of both the back cover and front conver in the front; in that case rename the back cover to "[last page number + 1].png" to make it appear last in the djvu file.  
