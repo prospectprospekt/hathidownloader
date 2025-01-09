@@ -154,27 +154,6 @@ def convert_image_to_djvu(full_text_id, page_num):
     print(f"Page {page_num}: ppm file successfully deleted!")
   print(f"Page {page_num}: sucessfully converted to djvu!")
   return None
-def generate_blank_djvu(full_text_id, page_num):
-  print(f"Page {page_num}: getting blank djvu")
-  # get the height and width, and image type
-  url = f"https://babel.hathitrust.org/cgi/imgsrv/image?id={full_text_id};seq={page_num};size=full"
-  while True:
-    response = requests.get(url)
-    if response.status_code == 200:
-      width = search(r"^\d*", response.headers['x-image-size'])
-      height = search(r"\d*$", response.headers['x-image-size'])
-      content_type = response.headers['content-type']
-      if content_type == "image/png":
-        subprocess.run(["magick", "-size", f"{width.group()}x{height.group()}", "canvas:white", f"{page_num}.pbm"])
-        subprocess.run(["cjb2", "-dpi", "200", f"{page_num}.pbm", f"{page_num}.djvu"])
-      else:
-        # non-bitonal images are half the width and height of bitonal images
-        subprocess.run(["magick", "-size", f"{width.group()}x{height.group()}", "canvas:white", f"{page_num}.pbm"])
-        subprocess.run(["cjb2", "-dpi", "100", f"{page_num}.pbm", f"{page_num}.djvu"])
-      break   
-    print(f"Page {page_num}: got status code {response.status_code}. Trying again")
-  print(f"Page {page_num}:blank djvu sucessfully created!")
-  return None
 # this is copied from quicktranscribe. Code from here should be executed 
 # without going into the directory where the images will be
 # downloaded
