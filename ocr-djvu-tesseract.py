@@ -66,7 +66,7 @@ class DjvuTesseract():
         """Prints a "complete" message if debugging is on"""
 
         if self.opts.debug:
-            print("complete")
+            print "complete"
 
     def calculate_djvu_length(self):
 
@@ -75,7 +75,7 @@ class DjvuTesseract():
         self.num_pages = int(out)
 
         if self.opts.debug:
-            # print("(INF) number of pages: %d" % self.num_pages)
+            print "(INF) number of pages: %d" % self.num_pages
 
     def format_ocr_text(self, page):
         """Format a page's OCR'd text into a DJVU friendly form"""
@@ -111,10 +111,10 @@ class DjvuTesseract():
         for page in range(1, self.num_pages+1): #djvu pages are 1-indexed
 
             if self.opts.debug:
-                # print("\n\t(INF) Processing page %d" % page)
+                print "\n\t(INF) Processing page %d" % page
 
             if self.opts.debug:
-                # print("\t(INF) Extracting DjVu page to image . . .")
+                print "\t(INF) Extracting DjVu page to image . . .",
             # Extract page an image
             cmd = ['ddjvu', '-format=tiff', '-page=%d' % page, self.opts.djvu, self.temp_img]
             out, err = self.command(cmd)
@@ -124,7 +124,7 @@ class DjvuTesseract():
             #Cleanup image
             if self.opts.clean:
                 if self.opts.debug:
-                    # print "\t(INF) Applying textcleaner . . .",
+                    print "\t(INF) Applying textcleaner . . .",
 
                 # apply text cleaner
                 cmd = ['./textcleaner', self.temp_img, self.temp_img]
@@ -133,7 +133,7 @@ class DjvuTesseract():
                 self.complete()
 
                 if self.opts.debug:
-                    # print "\t(INF) Applying bitonal conversion . . .",
+                    print "\t(INF) Applying bitonal conversion . . .",
 
                 # apply text cleaner
                 cmd = ['convert', self.temp_img, '-threshold', '50%', self.temp_img]
@@ -142,7 +142,7 @@ class DjvuTesseract():
                 self.complete()
 
             if self.opts.debug:
-                # print "\t(INF) Beginning OCR. . .",
+                print "\t(INF) Beginning OCR. . .",
 
             # Perform OCR on the image
             cmd = ['tesseract', self.temp_img, self.temp_ocr, '-l', self.opts.lang]
@@ -157,7 +157,7 @@ class DjvuTesseract():
             if self.opts.update:
 
                 if self.opts.debug:
-                    # print "\t(INF) Updating DJVU page . . .",
+                    print "\t(INF) Updating DJVU page . . .",
 
                 # replace the text in the DJVU file
                 cmd = ['djvused', self.opts.djvu, '-e', 'select %d; remove-txt' % page, "-s"]
@@ -171,7 +171,7 @@ class DjvuTesseract():
     def process_djvu(self):
 
         if self.opts.debug:
-            # print "(INF) Processing %s" % self.opts.djvu
+            print "(INF) Processing %s" % self.opts.djvu
 
         # calculate DJVU length
         self.calculate_djvu_length()
